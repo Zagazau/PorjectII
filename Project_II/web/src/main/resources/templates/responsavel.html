@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Responsável Instrutores - Página Inicial</title>
+    <link rel="stylesheet" type="text/css" href="responsavel.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div th:fragment="responsavelContent">
+    <div class="background"></div>
+    <div class="container">
+        <div class="header">
+        </div>
+        <div class="content">
+            <img src="images/gym-logo1.png" alt="GymMaster Logo" class="logo">
+            <h1>Responsável Instrutor</h1>
+            <h2>Lista de Aulas de Grupo</h2>
+            <table id="aulaTable">
+                <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Modalidade</th>
+                    <th>Nome Instrutor</th>
+                    <th>Vagas disponíveis</th>
+                    <th>Vagas ocupadas</th>
+                    <th>Estado Aula</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="aula, stat : ${aulas}" th:data-id="${aula.id}" onclick="selectAula(this)">
+                    <td th:text="${#dates.format(aula.dataHoraComeco, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td th:text="${modalidadeNames[stat.index]}"></td>
+                    <td th:text="${instrutorNames[stat.index]}"></td>
+                    <td th:text="${aula.vagas}"></td>
+                    <td th:text="${aula.totalLugares - aula.vagas}"></td>
+                    <td th:text="${estadoAulas[stat.index]}"></td>
+
+                </tr>
+                </tbody>
+            </table>
+            <input type="hidden" id="selectedAulaId">
+            <div class="button-container">
+                <div class="left-buttons">
+                    <button class="btn btn-exit" onclick="window.location.href='/logout'">Sair</button>
+                </div>
+                <div class="right-buttons">
+                    <button class="btn btn-details" onclick="viewDetails()">Ver Detalhes</button>
+                    <button class="btn btn-delete" onclick="deleteAula()">Eliminar aula</button>
+                    <button class="btn btn-add" onclick="window.location.href='/addAula'">Adicionar aula</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectAula(row) {
+        var id = row.getAttribute('data-id');
+        console.log('Selected Aula ID:', id);
+        document.getElementById('selectedAulaId').value = id;
+        var rows = document.querySelectorAll('#aulaTable tbody tr');
+        rows.forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+    }
+
+    function viewDetails() {
+        var id = document.getElementById('selectedAulaId').value;
+        if (id) {
+            window.location.href = '/detalhesAula?id=' + encodeURIComponent(id);
+        } else {
+            alert('Por favor, selecione uma aula primeiro.');
+        }
+    }
+
+    function deleteAula() {
+        var id = document.getElementById('selectedAulaId').value;
+        if (!id) {
+            alert('Por favor, selecione uma aula primeiro.');
+            return;
+        }
+
+        console.log('Deleting Aula ID:', id);
+
+        if (confirm('Tem a certeza que deseja eliminar a aula selecionada? Esta ação é irreversível!')) {
+            $.ajax({
+                url: '/deleteAula/' + encodeURIComponent(id),
+                type: 'DELETE',
+                success: function(result) {
+                    alert(result);
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    alert('Erro ao eliminar aula: ' + xhr.responseText);
+                }
+            });
+        }
+    }
+</script>
+</body>
+</html>
